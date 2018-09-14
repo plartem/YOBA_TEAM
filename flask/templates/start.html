@@ -1,0 +1,45 @@
+{% extends "material/base.html" %}
+{% import "material/utils.html" as util %}
+{% import "material/wtf.html" as wtf %}
+
+{% block title %}Start{% endblock %}
+
+{% block content %}
+<nav class="light-blue lighten-1" role="navigation"></nav>
+  <div class="section no-pad-bot" id="index-banner">
+    <div class="container">
+      <br><br>
+      <h1 class="header center orange-text">Automobile Search</h1>
+      <div class="col s10">
+        
+		
+		<h5 class="header center light">Service for searching cars</h5>
+		
+		{{ util.card(wtf.quick_form(form) )}}
+				
+	  </div>
+      <br><br>
+
+    </div>
+  </div>
+
+  <footer class="page-footer orange">
+    <div class="container">
+      <div class="row">
+       
+      </div>
+    </div>
+    <div class="footer-copyright">
+      <div class="container">
+      Made by <a class="orange-text text-lighten-3" href="http://materializecss.com">Materialize</a>
+      </div>
+    </div>
+  </footer>
+
+
+  <!--  Scripts-->
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="js/materialize.js"></script>
+  <script src="js/init.js"></script>
+
+{% endblock %}
