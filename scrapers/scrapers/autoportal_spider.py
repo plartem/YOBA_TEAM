@@ -1,5 +1,7 @@
 import scrapy
 import datetime
+# TODO: rename files
+from autoria_crawler.items import AutoriaCrawlerItem
 
 '''
     Scraper for used cars from 'http://autoportal.ua/'
@@ -58,15 +60,34 @@ class AutoPortalSpider(scrapy.Spider):
         year = getliText(1)
         mileage = getliText(2).rstrip(self.mileageQuantity).strip()
         engine_capacity = getliText(3)
-        fuel = AutoPortalSpider.txt2fuel(getliText(4))
+        fuel = getliText(4)#AutoPortalSpider.txt2fuel(getliText(4))
         #carcase -- 5
-        transmission = AutoPortalSpider.txt2transmission(getliText(6))
+        transmission = getliText(6)#AutoPortalSpider.txt2transmission(getliText(6))
         drive = AutoPortalSpider.txt2drive(getliText(7))
         #color -- 8
         
         photos = response.css('div.preview img::attr(src)').extract()
+        # TODO: remove name of classes
         additionalInfo = block_data.css('div.brd_fff').extract()#xpath('//div[@class="factor bg_f1"]').extract_first() #NoSQL
 
+        item = AutoPortalCrawlerItem()
+        item['mark_name'] = brand
+        item['model_name'] = model
+        item['year'] = year
+        item['info'] = additionalInfo
+        item['url'] = url
+        item['price'] = price
+        item['mileage'] = mileage
+        item['location'] = ""
+        # TODO: back to the indexes
+        item['fuel'] = fuel
+        item['transmission'] = transmission
+        item['image'] = photos[0]
+        
+        if item is not None:
+            yield item
+
+        '''
         yield {
             "url": url,
             "updateTime": updateTime,
@@ -95,7 +116,9 @@ class AutoPortalSpider(scrapy.Spider):
             "photos": photos,
             "additional": additionalInfo
         }
+        '''
 
+    # TODO: finish
     @staticmethod
     def txt2date(txt):
         return datetime.datetime.now()
