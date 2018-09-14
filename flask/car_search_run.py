@@ -1,8 +1,9 @@
+import re
 from flask import Flask, render_template, request, redirect, url_for
 from flask_material import Material 
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
-from wtforms import TextField, HiddenField, ValidationError, RadioField,\
+from wtforms import StringField, HiddenField, ValidationError, RadioField,\
     BooleanField, SubmitField, IntegerField, FormField, validators
 from wtforms.validators import Required
 from flask_pymongo import PyMongo
@@ -14,15 +15,15 @@ app.config['RECAPTCHA_PUBLIC_KEY'] = 'TEST'
 app.config["MONGO_URI"] = "mongodb://localhost:27017/autoria"
 mongo = PyMongo(app)
 
-class ExampleForm(Form):
-	mark_name = TextField('Mark', validators = [validators.required()])
-	model_name = TextField('Model')	  
+class ExampleForm(FlaskForm):
+	mark_name = StringField('Mark', validators = [validators.required()])
+	model_name = StringField('Model')
 			
-	submit_button = SubmitField('Find me a car!')	
+	submit_button = SubmitField('Find me a car!')
 
-class LoginForm(Form):
-	login = TextField('Enter your login', [validators.required()])
-	password = TextField('Enter your password', [validators.required()])
+class LoginForm(FlaskForm):
+	login = StringField('Enter your login', [validators.required()])
+	password = StringField('Enter your password', [validators.required()])
 	
 	#remember_me = BooleanField('remember_me')
 	
@@ -42,7 +43,8 @@ def start():
 	form = ExampleForm(request.form)
 	
 	if form.validate_on_submit():
-		cars = list(mongo.db.new_cars.find( {"mark_name" : form.mark_name.data }))
+		regx = re.compile("^%s$" %(form.mark_name.data), re.IGNORECASE)
+		cars = list(mongo.db.new_cars.find( {"mark_name" : regx }))
 		return render_template('check.html', data = cars)
 	
 	return render_template('start.html', form = form)
