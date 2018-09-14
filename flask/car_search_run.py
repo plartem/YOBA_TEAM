@@ -6,7 +6,6 @@ from wtforms import TextField, HiddenField, ValidationError, RadioField,\
     BooleanField, SubmitField, IntegerField, FormField, validators
 from wtforms.validators import Required
 from flask_pymongo import PyMongo
-from flask import jsonify
 
 app = Flask(__name__)  
 Material(app)  
@@ -21,13 +20,18 @@ class ExampleForm(Form):
 			
 	submit_button = SubmitField('Find me a car!')	
 
+class LoginForm(Form):
+	login = TextField('Enter your login', [validators.required()])
+	password = TextField('Enter your password', [validators.required()])
+	
+	#remember_me = BooleanField('remember_me')
+	
 
 @app.route('/')  
 def welcome():
-	form = ExampleForm(request.form)   
-
-	return render_template('test.html', form = form)  
-
+	form = LoginForm()
+	return render_template('index.html', form = form)  
+	
 	if __name__ == '__main__':  
 		app.run(debug = True)  
 	
@@ -39,7 +43,6 @@ def start():
 	
 	if form.validate_on_submit():
 		cars = list(mongo.db.new_cars.find( {"mark_name" : form.mark_name.data }))
-					
 		return render_template('check.html', data = cars)
 	
 	return render_template('start.html', form = form)
@@ -49,3 +52,14 @@ def checkDB():
 	cars = list(mongo.db.new_cars.find())
 		
 	return render_template('check.html', data = cars)
+
+@app.route('/register', methods = ['GET', 'POST'])
+def register():
+	
+	form = LoginForm()
+	if form.validate_on_submit():
+		flash('Login requested for ' + form.login.data + '", remember_me=' + str(form.remember_me.data))
+		return redirect('/index')
+	return render_template('register.html', 
+		title = 'Sign In',
+		form = form)

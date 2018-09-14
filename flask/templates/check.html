@@ -5,17 +5,46 @@
 {% block title %}Start{% endblock %}
 
 {% block content %}
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
 <nav class="light-blue lighten-1" role="navigation"></nav>
   <div class="section no-pad-bot" id="index-banner">
     <div class="container">
       <br><br>
       <h3 class="header center orange-text">Results: </h3>
       <div class="col s10">
+
+		  
+	  
+	  {% for item in data %}
+
+		
         
-		{% for item in data %}
-			<p><a> {{ item['mark_name'] }}</a>
-			<a>	{{ item['model_name'] }} </a>
-			<img src={{ item['image'] }}> </p>
+		<div class="col s12 m7">
+			<h2 class="header">{{ item['mark_name'] }}  {{ item['model_name'] }}</h2>
+				<div class="card horizontal">
+					<div class="card-image waves-effect waves-block waves-light">
+						<img class="activator" src={{ item['image']}}>
+					</div>
+					<div class="card-reveal">
+						<span class="card-title grey-text text-darken-4"><i class="material-icons right">close</i></span>
+							<p>{{ item['info']}}</p>
+					</div>
+					
+					<div class="card-stacked">
+						<div class="card-content">
+							
+							<i class= "tiny material-icons">monetization_on</i> <p> {{ item['price']}} </p>
+							<i class="tiny material-icons">event</i> <p> {{ item['year']}} </p>
+							<i class="tiny material-icons">directions_car</i> <p> {{ item['mileage']}} </p>
+						</div>
+						<div class="card-action">
+							<a href={{ item['url']}}> More information here. </a>
+						</div>
+					</div>
+				</div>
+		</div>
+				
 		{% endfor %}
 		
 	  </div>

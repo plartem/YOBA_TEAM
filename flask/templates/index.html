@@ -1,38 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
-  <title>Automobile Search</title>
+{% extends "material/base.html" %}
+{% import "material/utils.html" as util %}
+{% import "material/wtf.html" as wtf %}
 
-  <!-- CSS  -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
-  <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
-</head>
-<body>
-  <nav class="light-blue lighten-1" role="navigation">
-    <div class="nav-wrapper container"><a id="logo-container" href="#" class="brand-logo">Logo</a>
-      <ul class="right hide-on-med-and-down">
-        <li><a href="#">Navbar Link</a></li>
-      </ul>
+{% block title %}Auto Search{% endblock %}
 
-      <ul id="nav-mobile" class="sidenav">
-        <li><a href="#">Navbar Link</a></li>
-      </ul>
-      <a href="#" data-target="nav-mobile" class="sidenav-trigger"><i class="material-icons">menu</i></a>
-    </div>
+{% block content %}
+<nav class="light-blue lighten-1" role="navigation">
+       
   </nav>
   <div class="section no-pad-bot" id="index-banner">
     <div class="container">
-      <br><br>
+	  <br>
       <h1 class="header center orange-text">Automobile Search</h1>
       <div class="row center">
-        <h5 class="header col s12 light">A modern responsive front-end framework based on Material Design</h5>
+        <h5 class="header col s12 light">Service for searching cars</h5>
       </div>
+	  <div class="row">
+	  <div class="col s6 offset-s3">
+		<div class="card-panel">
+		{{  wtf.quick_form(form) }}
+		<p>
+      <label>
+        <input type="checkbox" checked="checked" />
+        <span>Remember me</span>
+      </label>
+    </p>
+		</div>
+	  </div>
+	  </div>
       <div class="row center">
-        <a href="http://materializecss.com/getting-started.html" id="download-button" class="btn-large waves-effect waves-light orange">Get Started</a>
-      </div>
+		<a href="/login" id="download-button" class="btn-large waves-effect waves-light light-blue">Login</a>
+		<a href="/start" id="download-button" class="btn-large waves-effect waves-light orange">Register</a>
+	  </div>
+	  <div class="row center">
+        <a href="/start" id="download-button" class="btn-large waves-effect waves-light orange">Start searching</a>
+	  </div>
       <br><br>
 
     </div>
@@ -118,5 +120,4 @@
   <script src="js/materialize.js"></script>
   <script src="js/init.js"></script>
 
-  </body>
-</html>
+{% endblock %}
