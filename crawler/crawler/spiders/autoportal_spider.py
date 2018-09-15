@@ -1,7 +1,6 @@
 import scrapy
-import datetime
-# TODO: rename files
-from autoria_crawler.items import AutoriaCrawlerItem
+#import datetime
+from crawler.items import CrawlerItem
 
 '''
     Scraper for used cars from 'http://autoportal.ua/'
@@ -18,16 +17,16 @@ class AutoPortalSpider(scrapy.Spider):
         'http://sale.autoportal.ua/filters.html?vehicle_id=5'   #minibuses
     ]
 
-    lastUpdate = datetime.datetime(1, 1, 1)
+    #lastUpdate = datetime.datetime(1, 1, 1)
     currencyQuantity = '$'
     mileageQuantity = 'км'
 
     def parse(self, response):
         def prepare_href(advr):
-            updateDate = AutoPortalSpider.txt2date(advr.css('p.br05::text').extract_first())
+            #updateDate = AutoPortalSpider.txt2date(advr.css('p.br05::text').extract_first())
             
             href = advr.css('a.vrtcl_itm::attr(href)').extract_first()
-            if (href and updateDate > self.lastUpdate):
+            if (href):
                 return response.follow(href, self.parse_advr)
              
         for advr in response.css('div.ads_fltr-hot'):
@@ -45,7 +44,7 @@ class AutoPortalSpider(scrapy.Spider):
         url = response.request.url
 
         block_data = response.xpath('//div[@class="ad_bit2 cell6"]')
-        updateTime = AutoPortalSpider.txt2date(block_data.css('ad_bit2_height i::text').extract_first())
+        #updateTime = AutoPortalSpider.txt2date(block_data.css('ad_bit2_height i::text').extract_first())
         li_rows = block_data.css('ul.twoCol_dot li')
         
         #fullname = li_rows[0].css('span::attr(title)').extract_first()
@@ -90,7 +89,7 @@ class AutoPortalSpider(scrapy.Spider):
         '''
         yield {
             "url": url,
-            "updateTime": updateTime,
+            #"updateTime": updateTime,
 
             "state": 0, # 0 - used, 1 - new     Is it really need?
             "brand": name['brand'],
@@ -116,10 +115,12 @@ class AutoPortalSpider(scrapy.Spider):
         }
         '''
 
+    '''
     # TODO: finish
     @staticmethod
     def txt2date(txt):
         return datetime.datetime.now()
+    '''
 
     @staticmethod
     def getName(response):
