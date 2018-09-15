@@ -65,11 +65,10 @@ class AutoPortalSpider(scrapy.Spider):
         drive = AutoPortalSpider.txt2drive(getliText(7))
         #color -- 8
         
-        #photos = response.css('div.preview img::attr(src)').extract()
-        photo = response.css('img.zm_foto::attr(src)').extract_first()
+        photos = response.css('div.preview img::attr(src)').extract()
         # TODO: remove name of classes
         additionalInfo = block_data.css('div.brd_fff').extract()#xpath('//div[@class="factor bg_f1"]').extract_first() #NoSQL
-        '''
+        
         item = AutoriaCrawlerItem()
         item['mark_name'] = name['brand']
         item['model_name'] = name['model']
@@ -82,7 +81,7 @@ class AutoPortalSpider(scrapy.Spider):
         # TODO: back to the indexes
         item['fuel'] = fuel
         item['transmission'] = transmission
-        item['image'] = photo
+        item['image'] = photos[0]
         
         if item is not None:
             yield item
@@ -110,11 +109,10 @@ class AutoPortalSpider(scrapy.Spider):
             "drive": drive, # 0 - undefined, 1 - four-wheel, 2 - rear, 3 - front-wheel
             "engine_capacity": engine_capacity,
 
-            #"photos": photos,
-            "photo": photo,
+            "photos": photos,
             "additional": additionalInfo
         }
-        
+        '''
 
     # TODO: finish
     @staticmethod
