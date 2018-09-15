@@ -1,7 +1,7 @@
 import scrapy
-#import datetime
+import datetime
 # TODO: rename files
-from crawler.items import CrawlerItem
+from autoria_crawler.items import AutoriaCrawlerItem
 
 '''
     Scraper for used cars from 'http://autoportal.ua/'
@@ -12,32 +12,28 @@ from crawler.items import CrawlerItem
 
 class AutoPortalSpider(scrapy.Spider):
     name = "autoportal"
+
     start_urls = [
         'http://sale.autoportal.ua/filters.html?vehicle_id=1',  #passenger cars
         'http://sale.autoportal.ua/filters.html?vehicle_id=5'   #minibuses
     ]
 
-    #lastUpdate = datetime.datetime(1, 1, 1)
-    currencyQuantity = 'j'
+    lastUpdate = datetime.datetime(1, 1, 1)
+    currencyQuantity = '$'
     mileageQuantity = 'км'
-	
-    def parse(self, response):
-        global count
-        count = 1
 
+    def parse(self, response):
         def prepare_href(advr):
             updateDate = AutoPortalSpider.txt2date(advr.css('p.br05::text').extract_first())
             
             href = advr.css('a.vrtcl_itm::attr(href)').extract_first()
-            if (href):
+            if (href and updateDate > self.lastUpdate):
                 return response.follow(href, self.parse_advr)
              
-        #for advr in response.css('div.ads_fltr-hot'):
-         #   yield prepare_href(advr)
+        for advr in response.css('div.ads_fltr-hot'):
+            yield prepare_href(advr)
         for advr in response.css('div.ads_fltr'):
-            if count < 4:
-                count +=1
-                yield prepare_href(advr)
+            yield prepare_href(advr)
     
         for next_page in response.css('a.pnext'):
             yield response.follow(next_page, callback=self.parse)
@@ -52,10 +48,9 @@ class AutoPortalSpider(scrapy.Spider):
         updateTime = AutoPortalSpider.txt2date(block_data.css('ad_bit2_height i::text').extract_first())
         li_rows = block_data.css('ul.twoCol_dot li')
         
-        fullname = li_rows[0].css('span::attr(title)').extract_first()
+        #fullname = li_rows[0].css('span::attr(title)').extract_first()
         
-        brand = AutoPortalSpider.getBrand(response)
-        model = AutoPortalSpider.getModel(fullname, brand)
+        name = AutoPortalSpider.getName(response)
         
         def getliText(index):
             return li_rows[index].css('b::text').extract_first() 
@@ -70,13 +65,14 @@ class AutoPortalSpider(scrapy.Spider):
         drive = AutoPortalSpider.txt2drive(getliText(7))
         #color -- 8
         
-        photos = response.css("img.zm_foto::attr(src)").extract_first()
+        #photos = response.css('div.preview img::attr(src)').extract()
+        photo = response.css('img.zm_foto::attr(src)').extract_first()
         # TODO: remove name of classes
         additionalInfo = block_data.css('div.brd_fff').extract()#xpath('//div[@class="factor bg_f1"]').extract_first() #NoSQL
-
-        item = 	CrawlerItem()
-        item['mark_name'] = brand
-        item['model_name'] = model
+        
+        item = AutoriaCrawlerItem()
+        item['mark_name'] = name['brand']
+        item['model_name'] = name['model']
         item['year'] = year
         item['info'] = additionalInfo
         item['url'] = url
@@ -86,7 +82,7 @@ class AutoPortalSpider(scrapy.Spider):
         # TODO: back to the indexes
         item['fuel'] = fuel
         item['transmission'] = transmission
-        item['image'] = photos
+        item['image'] = photo
         
         if item is not None:
             yield item
@@ -97,11 +93,8 @@ class AutoPortalSpider(scrapy.Spider):
             "updateTime": updateTime,
 
             "state": 0, # 0 - used, 1 - new     Is it really need?
-            "name" : {
-                "full": fullname, 
-                "brand": brand, 
-                "model": model
-            },
+            "brand": name['brand'],
+            "model": name['model'],
             "year": year,
             "mileage": {
                 "quantity": self.mileageQuantity,
@@ -117,7 +110,8 @@ class AutoPortalSpider(scrapy.Spider):
             "drive": drive, # 0 - undefined, 1 - four-wheel, 2 - rear, 3 - front-wheel
             "engine_capacity": engine_capacity,
 
-            "photos": photos,
+            #"photos": photos,
+            "photo": photo,
             "additional": additionalInfo
         }
         '''
@@ -125,25 +119,27 @@ class AutoPortalSpider(scrapy.Spider):
     # TODO: finish
     @staticmethod
     def txt2date(txt):
-        return ""#datetime.datetime.now()
+        return datetime.datetime.now()
 
     @staticmethod
-    def getBrand(response):
+    def getName(response):
+        # Breadcrumbs on the top of the page
+        breadLines = response.xpath('//div[@id="breadcrumbs"]/div/a/span/text()').extract()
         # Get penult bread from breadcrumbs
-        breadLine = response.xpath('//div[@id="breadcrumbs"]/div/a/span/text()').extract()[-2]
+        breadWithBrand = breadLines[-2]
         # Split first unless word ['Продажа', 'Микроавтобусы']
-        txt = breadLine.split(' ', 1)
+        txtArr = breadWithBrand.split(' ', 1)
         # Remaining would be brand of car
-        return txt[1]
+        brand = txtArr[1]
 
-    @staticmethod
-    def getModel(fullname, brand):
-        # Only cut brand from fullname and add deffault value for safety
-        array = fullname.split(brand, 1)
-        if (len(array) > 1):
-            return array[1].strip()
-        else:
-            pass
+        # Get last bread from breadcrumbs
+        breadWithFullName = breadLines[-1]
+        # Split full name on brand and model
+        txtArr = breadWithFullName.split(brand, 1)
+        # Remaining would be model of car
+        model = txtArr[1].strip()
+
+        return {"brand": brand, "model": model}
 
     @staticmethod
     def txt2fuel(key):
