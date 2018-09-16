@@ -106,7 +106,7 @@ def confirm_token(token, expiration=3600):
 def welcome():
     form = LoginForm()
 
-    return render_template('index.html', form=form, id=session["user_id"])
+    return render_template('index.html', form=form)
 
 
     if __name__ == '__main__':
