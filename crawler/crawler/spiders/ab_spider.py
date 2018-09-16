@@ -4,7 +4,7 @@ from scrapy.selector import Selector
 from crawler.items import CrawlerItem
 
 
-class AutoriaCrawler(scrapy.Spider):
+class AutoBazarSpider(scrapy.Spider):
 	name = "ab"
 		
 	def start_requests(self):
