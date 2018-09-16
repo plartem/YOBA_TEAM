@@ -123,8 +123,6 @@ def login():
             "SELECT id, password, token FROM users WHERE login='%s' OR email='%s'"
             % (form.login.data, form.login.data))
         data = cursor.fetchone()
-        print(data[2])
-        print(data[0])
         if data[2] == '':
             if bcrypt.check_password_hash(data[1], form.password.data):
                 session['user_id'] = data[0]
@@ -162,8 +160,7 @@ def checkDB():
 @app.route('/signup', methods=['GET', 'POST'])
 def sign_up():
     form = SignUpForm(request.form)
-    if form.validate_on_submit():
-        print(form.password.data, form.confirm.data)
+    if form.validate_on_submit():        
         if form.password.data == form.confirm.data:
             hash = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             token = secrets.token_urlsafe(64)
@@ -173,7 +170,6 @@ def sign_up():
             subject = "Please confirm your email"
             send_email(form.email.data, subject, html)
 
-            print()
             cursor = conn.cursor()
             cursor.execute("INSERT INTO users(email, password, name, surname, login, token) VALUES('%s', '%s', '%s', '%s', '%s', '%s')"
                           %(form.email.data, hash, form.name.data, form.surname.data, form.login.data, token))
@@ -184,8 +180,6 @@ def sign_up():
                 flash('To finish registration follow registration email confirmation link')
             else:
                 flash('OOPS...SOMETHING WENT WRONG....')
-                #TODO LOG ERROR
-                # str(data[0])
         else:
             flash('Passwords do not match')
             return render_template('signUp.html', form=form)
