@@ -25,7 +25,7 @@ app.config['SECURITY_PASSWORD_SALT'] = 'SALT'
 app.config['RECAPTCHA_PUBLIC_KEY'] = 'TEST'
 # app.config['MAIL_DEFAULT_SENDER'] = 'sender'
 
-app.config["MONGO_URI"] = "mongodb://localhost:27017/autoria"
+app.config["MONGO_URI"] = "mongodb://localhost:27017/crawler_db"
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
@@ -141,7 +141,7 @@ def start():
 
     if form.validate_on_submit():
         regx = re.compile("^%s$" % (form.mark_name.data), re.IGNORECASE)
-        cars = list(mongo.db.new_cars.find({"mark_name": regx}))
+        cars = list(mongo.db.cars.find({"mark_name": regx}))
         return render_template('check.html', data=cars)
 
     return render_template('start.html', form=form)
@@ -149,7 +149,7 @@ def start():
 
 @app.route('/checkDB')
 def checkDB():
-    cars = list(mongo.db.new_cars.find())
+    cars = list(mongo.db.cars.find())
 
     return render_template('check.html', data=cars)
 
