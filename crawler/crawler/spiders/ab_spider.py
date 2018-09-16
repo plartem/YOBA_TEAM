@@ -49,8 +49,7 @@ class AutoBazarSpider(scrapy.Spider):
                 yield item
 
         url = "https://ab.ua/api/_posts" + json_response["next"][json_response["next"].rfind("/"):]
-        current_page = int(re.search('&page=(\d+)&', url).group(1))
+        #current_page = int(re.search('&page=(\d+)&', url).group(1))
 
-        if current_page < 5:
-            if url is not None:
-                yield scrapy.Request(url=url, callback=self.parse)
+        if url is not None:
+            yield scrapy.Request(url=url, callback=self.parse)

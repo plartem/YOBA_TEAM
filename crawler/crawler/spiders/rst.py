@@ -18,9 +18,8 @@ class RSTSpider(scrapy.Spider):
 
         # follow pagination links
         href = response.css("div#rst-mobile-oldcars-results table tr td:nth-child(2) a").xpath("@href").extract_first()
-        page_num = int(href[href.rfind("=") + 1:])
-        if page_num <= 1:
-            yield response.follow('http://m.rst.ua' + href, self.parse)
+        #page_num = int(href[href.rfind("=") + 1:])
+        yield response.follow('http://m.rst.ua' + href, self.parse)
 
     def parse_car(self, response):
         def extract_with_css(query):

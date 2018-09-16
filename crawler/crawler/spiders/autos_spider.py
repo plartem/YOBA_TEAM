@@ -10,9 +10,6 @@ class AutosSpider(scrapy.Spider):
     allowed_domains = ['autos.ua']
     start_urls = ['https://autos.ua/car/']
 
-    custom_settings = {
-        'CLOSESPIDER_PAGECOUNT': 100
-    }
     download_delay = 0.2
 
     def parse(self, response):
