@@ -61,17 +61,17 @@ class ExampleForm(FlaskForm):
 
 class LoginForm(FlaskForm):
     login = StringField('Enter your login', [validators.required()])
-    password = StringField('Enter your password', [validators.required()])
+    password = PasswordField('Enter your password', [validators.required()])
     submit_button = SubmitField('LOGIN')
 
 
 class SignUpForm(FlaskForm):
     login = StringField('Enter login', [validators.required()])
-    password = PasswordField('Enter password', [validators.required()])
+    password = PasswordField('Enter password', [validators.required(), validators.equal_to('confirm')])
     confirm = PasswordField('Confirm password', [validators.required()])
     name = StringField('Name', [validators.required()])
     surname = StringField('Surname', [validators.required()])
-    email = StringField('E-mail', [validators.required()])
+    email = StringField('E-mail', [validators.required(), validators.email()])
     submit_button = SubmitField('Sign Up')
 
 
@@ -104,9 +104,7 @@ def confirm_token(token, expiration=3600):
 
 @app.route('/')
 def welcome():
-    form = LoginForm()
-
-    return render_template('index.html', form=form)
+    return render_template('index.html')
 
 
     if __name__ == '__main__':
@@ -127,13 +125,13 @@ def login():
             if bcrypt.check_password_hash(data[1], form.password.data):
                 session['user_id'] = data[0]
                 flash('SUCCESSSSSSS')
-                return render_template('base.html')
+                return render_template('index.html')
             else:
                 flash('Wrong password')
-                return render_template('base.html')
+                return render_template('login.html', form=form)
         else:
             flash("Registration isn't finished")
-            return render_template('base.html')
+            return render_template('index.html')
 
     return render_template('login.html', form=form)
 
@@ -170,10 +168,13 @@ def sign_up():
             subject = "Please confirm your email"
             send_email(form.email.data, subject, html)
 
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO users(email, password, name, surname, login, token) VALUES('%s', '%s', '%s', '%s', '%s', '%s')"
-                          %(form.email.data, hash, form.name.data, form.surname.data, form.login.data, token))
-            data = cursor.fetchall()
+            try:
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO users(email, password, name, surname, login, token) VALUES('%s', '%s', '%s', '%s', '%s', '%s')"
+                              %(form.email.data, hash, form.name.data, form.surname.data, form.login.data, token))
+                data = cursor.fetchall()
+            except:
+                flash('OOPS...SOMETHING WENT WRONG....')
 
             if len(data) is 0:
                 conn.commit()
@@ -183,7 +184,7 @@ def sign_up():
         else:
             flash('Passwords do not match')
             return render_template('signUp.html', form=form)
-        return render_template('base.html')
+        return render_template('index.html')
     return render_template('signUp.html', form=form)
 
 
@@ -192,7 +193,6 @@ def confirm_email(token):
     cursor = conn.cursor()
     cursor.execute("UPDATE users SET token='' WHERE token='%s'" %(token))
     data = cursor.fetchall()
-
     if len(data) is 0:
         conn.commit()
         flash('Registration finished')
@@ -200,4 +200,10 @@ def confirm_email(token):
         flash('OOPS...SOMETHING WENT WRONG....')
         # TODO LOG ERROR
         # str(data[0])
-    return render_template('base.html')
+    return render_template('index.html')
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')

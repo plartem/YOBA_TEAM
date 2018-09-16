@@ -1,19 +1,76 @@
-<html>
-  <head>
-    <title>{{title}}</title>
-  </head>
-  <body>
-    <div><a href="/index">Home</a></div>
-    <hr>
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <ul>
-    {% for message in messages %}
-        <li>{{ message }} </li>
-    {% endfor %}
-    </ul>
-    {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
-  </body>
-</html>
+{% extends "material/base.html" %}
+{% import "material/utils.html" as util %}
+{% import "material/wtf.html" as wtf %}
+
+{% block title %}Auto Search{% endblock %}
+
+{% block content %}
+<nav class="light-blue lighten-1" role="navigation">
+    <div class="row right">
+        {% if session['user_id'] %}
+        <a href="/logout" class="btn-large waves-effect waves-light orange">Logout</a>
+        {% else %}
+        <a href="/login" class="btn-large waves-effect waves-light light-blue">Login</a>
+        <a href="/signUp" class="btn-large waves-effect waves-light orange">Register</a>
+        {% endif %}
+    </div>
+
+</nav>
+
+<div class="section no-pad-bot">
+    {% block base_content %}{% endblock %}
+</div>
+
+<footer class="page-footer orange">
+    <div class="container">
+        <div class="row">
+            <div class="col l6 s12">
+                <h5 class="white-text">Company Bio</h5>
+                <p class="grey-text text-lighten-4">We are a team of college students working on this project like it's
+                    our full time job. Any amount would help support and continue development on this project and is
+                    greatly appreciated.</p>
+
+
+            </div>
+            <div class="col l3 s12">
+                <h5 class="white-text">Settings</h5>
+                <ul>
+                    <li><a class="white-text" href="#!">Link 1</a></li>
+                    <li><a class="white-text" href="#!">Link 2</a></li>
+                    <li><a class="white-text" href="#!">Link 3</a></li>
+                    <li><a class="white-text" href="#!">Link 4</a></li>
+                </ul>
+            </div>
+            <div class="col l3 s12">
+                <h5 class="white-text">Connect</h5>
+                <ul>
+                    <li><a class="white-text" href="#!">Link 1</a></li>
+                    <li><a class="white-text" href="#!">Link 2</a></li>
+                    <li><a class="white-text" href="#!">Link 3</a></li>
+                    <li><a class="white-text" href="#!">Link 4</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container">
+            Made by <a class="orange-text text-lighten-3" href="http://materializecss.com">Materialize</a>
+        </div>
+    </div>
+</footer>
+
+{% endblock %}
+
+
+{% block scripts %}
+{{ super() }}
+<script>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+  M.toast({html: '{{ message }}'})
+{% endfor %}
+{% endif %}
+{% endwith %}
+</script>
+{% endblock %}
