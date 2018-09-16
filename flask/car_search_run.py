@@ -1,19 +1,56 @@
 import re
-from flask import Flask, render_template, request, redirect, url_for
+import secrets
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_materialize import Material
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
 from wtforms import StringField, HiddenField, ValidationError, RadioField, \
     BooleanField, SubmitField, IntegerField, FormField, PasswordField, validators
-from wtforms.validators import DataRequired
+from wtforms.validators import Required, DataRequired
 from flask_pymongo import PyMongo
+from flask_session import Session
+
+from flask_bcrypt import Bcrypt
+
+# from token import generate_confirmation_token, confirm_token
+# from email import send_email
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
+from flaskext.mysql import MySQL
 
 app = Flask(__name__)
 Material(app)
 app.config['SECRET_KEY'] = 'USE-YOUR-OWN-SECRET-KEY-DAMNIT'
+app.config['SECURITY_PASSWORD_SALT'] = 'SALT'
 app.config['RECAPTCHA_PUBLIC_KEY'] = 'TEST'
+# app.config['MAIL_DEFAULT_SENDER'] = 'sender'
+
 app.config["MONGO_URI"] = "mongodb://localhost:27017/autoria"
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'shoplab7@gmail.com'
+app.config['MAIL_PASSWORD'] = 'shoplab7test'
+app.config['MAIL_DEFAULT_SENDER'] = 'shoplab7@gmail.com'
+
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_PORT'] = 3306
+app.config['MYSQL_DATABASE_USER'] = 'root'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
+app.config['MYSQL_DATABASE_DB'] = 'cars'
+
+app.secret_key = 'super secret key'
+app.config['SESSION_TYPE'] = 'filesystem'
+
+Session(app)
+bcrypt = Bcrypt(app)
 mongo = PyMongo(app)
+mail = Mail(app)
+mysql = MySQL()
+mysql.init_app(app)
+conn = mysql.connect()
+
 
 
 class ExampleForm(FlaskForm):
@@ -23,20 +60,79 @@ class ExampleForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
-    login = StringField('Enter your login', validators=[validators.required()])
-    password = PasswordField('Enter your password', validators=[validators.required()])
+    login = StringField('Enter your login', [validators.required()])
+    password = PasswordField('Enter your password', [validators.required()])
+    submit_button = SubmitField('LOGIN')
 
 
-# remember_me = BooleanField('remember_me')
+class SignUpForm(FlaskForm):
+    login = StringField('Enter login', [validators.required()])
+    password = PasswordField('Enter password', [validators.required(), validators.equal_to('confirm')])
+    confirm = PasswordField('Confirm password', [validators.required()])
+    name = StringField('Name', [validators.required()])
+    surname = StringField('Surname', [validators.required()])
+    email = StringField('E-mail', [validators.required(), validators.email()])
+    submit_button = SubmitField('Sign Up')
+
+
+def send_email(to, subject, template):
+    msg = Message(
+        subject,
+        sender="SOME USER",
+        recipients=[to],
+        html=template
+    )
+    mail.send(msg)
+
+
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt=app.config['SECURITY_PASSWORD_SALT'])
+
+
+def confirm_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    email = serializer.loads(
+        token,
+        salt=app.config['SECURITY_PASSWORD_SALT'],
+        max_age=expiration
+    )
+
+    # return False
+    return email
 
 
 @app.route('/')
-def welcome():
-    form = LoginForm()
-    return render_template('index.html', form=form)
+def index():
+    return render_template('index.html')
 
     if __name__ == '__main__':
         app.run(debug=True)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm(request.form)
+
+    if form.validate_on_submit():
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, password, token FROM users WHERE login='%s' OR email='%s'"
+            % (form.login.data, form.login.data))
+        data = cursor.fetchone()
+        if data[2] == '':
+            if bcrypt.check_password_hash(data[1], form.password.data):
+                session['user_id'] = data[0]
+                flash('SUCCESSSSSSS')
+                return redirect(url_for('index'))
+            else:
+                flash('Wrong password')
+                return render_template('login.html', form=form)
+        else:
+            flash("Registration isn't finished")
+        return redirect(url_for('index'))
+
+    return render_template('login.html', form=form)
 
 
 @app.route('/start', methods=['GET', 'POST'])
@@ -58,12 +154,89 @@ def checkDB():
     return render_template('check.html', data=cars)
 
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    form = LoginForm()
-    if form.validate_on_submit():
-        #flash('Login requested for ' + form.login.data + '", remember_me=' + str(form.remember_me.data))
-        return redirect('/index')
-    return render_template('register.html',
-                           title='Sign In',
-                           form=form)
+@app.route('/signup', methods=['GET', 'POST'])
+def sign_up():
+    form = SignUpForm(request.form)
+    if form.validate_on_submit():        
+        if form.password.data == form.confirm.data:
+            hash = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+            token = secrets.token_urlsafe(64)
+            confirm_url = url_for('confirm_email', token=token, _external=True)
+
+            html = render_template('activate.html', confirm_url=confirm_url)
+            subject = "Please confirm your email"
+            send_email(form.email.data, subject, html)
+
+            try:
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO users(email, password, name, surname, login, token) VALUES('%s', '%s', '%s', '%s', '%s', '%s')"
+                              %(form.email.data, hash, form.name.data, form.surname.data, form.login.data, token))
+                data = cursor.fetchall()
+            except:
+                flash('OOPS...SOMETHING WENT WRONG....')
+
+            if len(data) is 0:
+                conn.commit()
+                flash('To finish registration follow registration email confirmation link')
+            else:
+                flash('OOPS...SOMETHING WENT WRONG....')
+        else:
+            flash('Passwords do not match')
+            return render_template('signUp.html', form=form)
+        return redirect(url_for('index'))
+    return render_template('signUp.html', form=form)
+
+
+@app.route('/confirm/<token>')
+def confirm_email(token):
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET token='' WHERE token='%s'" %(token))
+    data = cursor.fetchall()
+    if len(data) is 0:
+        conn.commit()
+        flash('Registration finished')
+    else:
+        flash('OOPS...SOMETHING WENT WRONG....')
+    return redirect(url_for('index'))
+
+
+@app.route('/queries')
+def queries():
+    if session['user_id']:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, mark, model, high_price, low_price, year, mileage FROM queries WHERE user_id=%d"
+            % (int(session['user_id'])))
+        db_data = cursor.fetchall()
+        data = []
+        for row in db_data:
+            data.append({
+                'id' : row[0],
+                'mark' : row[1],
+                'model' : row[2],
+                'high_price' : row[3],
+                'low_price' : row[4],
+                'year' : row[5],
+                'mileage' : row[6]
+            })
+        return render_template("queries.html", data=data)
+    return redirect('/')
+
+
+@app.route('/removeQuery/<id>')
+def remove_query(id):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM queries WHERE id='%d'" %(int(id)))
+    data = cursor.fetchall()
+    if len(data) is 0:
+        conn.commit()
+        flash('Query removed')
+    else:
+        flash('OOPS...SOMETHING WENT WRONG....')
+    return redirect(url_for('queries'))
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')
