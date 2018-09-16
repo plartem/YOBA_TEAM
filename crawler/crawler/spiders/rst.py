@@ -18,8 +18,9 @@ class RSTSpider(scrapy.Spider):
 
         # follow pagination links
         href = response.css("div#rst-mobile-oldcars-results table tr td:nth-child(2) a").xpath("@href").extract_first()
-        #page_num = int(href[href.rfind("=") + 1:])
-        yield response.follow('http://m.rst.ua' + href, self.parse)
+        page_num = int(href[href.rfind("=") + 1:])
+        if page_num <= 1:
+            yield response.follow('http://m.rst.ua' + href, self.parse)
 
     def parse_car(self, response):
         def extract_with_css(query):
@@ -37,7 +38,7 @@ class RSTSpider(scrapy.Spider):
 
         item["mark_name"] = mark_name
 
-        model_name = re.search(mark_name+'/(.+?)/', href).group(1)
+        model_name = re.search(mark_name + '/(.+?)/', href).group(1)
 
         item["model_name"] = model_name
 
@@ -64,7 +65,13 @@ class RSTSpider(scrapy.Spider):
                         item["mileage"] = rows[1].css("::text")[0].extract()
 
                     if rows[0].css("::text")[0].extract() == "КПП":
-                        item["transmission"] = rows[1].css("::text")[0].extract()
+                        temp = rows[1].css("::text")[0].extract()
+                        index = temp.find('-')
+
+                        if index != -1:
+                            temp = temp[:-2]
+
+                        item["transmission"] = temp
 
         else:
 
@@ -80,7 +87,13 @@ class RSTSpider(scrapy.Spider):
                     item["mileage"] = rows[0].css("::text")[0].extract()
 
                 if rows[0].css("::text")[1].extract() == "КПП":
-                    item["transmission"] = rows[0].css("::text")[0].extract()
+                    temp = rows[0].css("::text")[0].extract()
+                    index = temp.find('-')
+
+                    if index != -1:
+                        temp = temp[:-2]
+
+                    item["transmission"] = temp
 
                 if rows[0].css("::text")[1].extract() == "Город":
                     item["location"] = rows[0].css("::text")[0].extract()

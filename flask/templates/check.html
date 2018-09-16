@@ -6,12 +6,12 @@
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 <div class="section no-pad-bot" id="index-banner">
-    <div class="container">
+    <div>
         <br><br>
         <h3 class="header center orange-text">Results: </h3>
         <div class="row">
             {% for item in data %}
-            <div class="col s4 m4">
+            <div class="col s6 m6">
                 <h2 class="header">{{ item['mark_name'] }} {{ item['model_name'] }}</h2>
                 <div class="card horizontal">
                     <div class="card-image waves-effect waves-block waves-light">
@@ -24,8 +24,7 @@
                     </div>
 
                     <div class="card-stacked">
-                        <div class="card-content">
-
+                        <div class="card-content">WW
                             <i class="tiny material-icons">monetization_on</i>
                             <p> {{ item['price']}} </p>
                             <i class="tiny material-icons">event</i>
@@ -39,6 +38,7 @@
                     </div>
                 </div>
             </div>
+
 
             {% endfor %}
 
