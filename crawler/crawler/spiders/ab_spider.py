@@ -4,54 +4,55 @@ from flask import json
 from crawler.items import CrawlerItem
 
 
-class AutoriaCrawler(scrapy.Spider):
+class AutoBazarSpider(scrapy.Spider):
     name = "ab"
 
-    def start_requests(self):
-        url = 'https://ab.ua/api/_posts/?capacity_unit=1&currency=usd&is_new=0&page=1&power_unit=1&transport=1'
-        yield scrapy.Request(url=url, callback=self.parse)
 
-    def parse(self, response):
+def start_requests(self):
+    url = 'https://ab.ua/api/_posts/?capacity_unit=1&currency=usd&is_new=0&page=1&power_unit=1&transport=1'
+    yield scrapy.Request(url=url, callback=self.parse)
 
-        json_response = json.loads(response.body.decode("utf-8"))
 
-        for car in json_response["results"]:
-            item = CrawlerItem()
-            item["url"] = "https://ab.ua" + car["permalink"]
+def parse(self, response):
+    json_response = json.loads(response.body.decode("utf-8"))
 
-            item["mark_name"] = car["make"]["title"]
-            item["model_name"] = car["model"]["title"]
+    for car in json_response["results"]:
+        item = CrawlerItem()
+        item["url"] = "https://ab.ua" + car["permalink"]
 
-            item["year"] = car["year"]
+        item["mark_name"] = car["make"]["title"]
+        item["model_name"] = car["model"]["title"]
 
-            for price in car["price"]:
-                if price["currency"] == "usd":
-                    item["price"] = price["value"]
-                    break
+        item["year"] = car["year"]
 
-            item["info"] = car["description"]
-            item["mileage"] = car["mileage"]
-            item["location"] = car["location"]["title"]
+        for price in car["price"]:
+            if price["currency"] == "usd":
+                item["price"] = price["value"]
+                break
 
-            item["fuel"] = ""
-            item["transmission"] = ""
-            if "engine" in car["characteristics"]:
-                item["fuel"] = car["characteristics"]["engine"]["title"]
-            if "gearbox" in car["characteristics"]:
-                item["transmission"] = car["characteristics"]["gearbox"]["title"]
-            if car["gas_equipment"]:
-                item["fuel"] += "ГБО"
+        item["info"] = car["description"]
+        item["mileage"] = car["mileage"]
+        item["location"] = car["location"]["title"]
 
-            item["image"] = ""
-            if len(car["photos"]):
-                item["image"] = car["photos"][0]["image"]
+        item["fuel"] = ""
+        item["transmission"] = ""
+        if "engine" in car["characteristics"]:
+            item["fuel"] = car["characteristics"]["engine"]["title"]
+        if "gearbox" in car["characteristics"]:
+            item["transmission"] = car["characteristics"]["gearbox"]["title"]
+        if car["gas_equipment"]:
+            item["fuel"] += "ГБО"
 
-            if item is not None:
-                yield item
+        item["image"] = ""
+        if len(car["photos"]):
+            item["image"] = car["photos"][0]["image"]
 
-        url = "https://ab.ua/api/_posts" + json_response["next"][json_response["next"].rfind("/"):]
-        current_page = re.search('&page=(\d+)&', url).group(1)
+        if item is not None:
+            yield item
 
-        if current_page < 5:
-            if url is not None:
-                yield scrapy.Request(url=url, callback=self.parse)
+    url = "https://ab.ua/api/_posts" + json_response["next"][json_response["next"].rfind("/"):]
+    current_page = re.search('&page=(\d+)&', url).group(1)
+
+    if current_page < 5:
+        if url is not None:
+            yield scrapy.Request(url=url, callback=self.parse)
