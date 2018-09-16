@@ -58,7 +58,7 @@ class AutoriaCrawler(scrapy.Spider):
 						
 		#self.log(name + 'has been parsed')
 		
-		url = jsonresponse["next"]
+		url = "https://ab.ua/api/_posts" + jsonresponse["next"][jsonresponse["next"].rfind("/"):]
 		
 		
 		if counter < 5:
