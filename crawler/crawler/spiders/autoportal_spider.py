@@ -69,7 +69,7 @@ class AutoPortalSpider(scrapy.Spider):
         # TODO: remove name of classes
         additionalInfo = block_data.css('div.brd_fff').extract()#xpath('//div[@class="factor bg_f1"]').extract_first() #NoSQL
         
-        item = AutoriaCrawlerItem()
+        item = CrawlerItem()
         item['mark_name'] = name['brand']
         item['model_name'] = name['model']
         item['year'] = year

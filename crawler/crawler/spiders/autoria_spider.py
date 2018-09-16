@@ -3,18 +3,14 @@ from scrapy.selector import Selector
 from crawler.items import CrawlerItem
 
 
-class AutoriaCrawler(scrapy.Spider):
+class AutoriaSpider(scrapy.Spider):
 	name = "autoria"
 		
 	def start_requests(self):
-		global counter
-		counter = 0
 		url = 'https://auto.ria.com/car/used/' 
 		yield scrapy.Request(url=url, callback=self.parse)
 			
 	def parse(self, response):
-		global counter 
-		counter += 1
 			
 		for car in response.css("section.ticket-item"):
 			
@@ -51,9 +47,8 @@ class AutoriaCrawler(scrapy.Spider):
 		url = response.css("span.page-item.next.text-r").css("link").xpath("@href").extract_first()
 		
 		
-		if counter < 5:
-			if url is not None: 
-				yield scrapy.Request(url=url, callback=self.parse)
+		if url is not None: 
+			yield scrapy.Request(url=url, callback=self.parse)
 		
 	
  

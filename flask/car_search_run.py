@@ -6,7 +6,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
 from wtforms import StringField, HiddenField, ValidationError, RadioField, \
     BooleanField, SubmitField, IntegerField, FormField, PasswordField, validators
-from wtforms.validators import Required
+from wtforms.validators import Required, DataRequired
 from flask_pymongo import PyMongo
 from flask_session import Session
 
@@ -52,10 +52,10 @@ mysql.init_app(app)
 conn = mysql.connect()
 
 
+
 class ExampleForm(FlaskForm):
     mark_name = StringField('Mark', validators=[validators.required()])
     model_name = StringField('Model')
-
     submit_button = SubmitField('Find me a car!')
 
 
@@ -105,7 +105,6 @@ def confirm_token(token, expiration=3600):
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
     if __name__ == '__main__':
         app.run(debug=True)
