@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Auto Search{% endblock %}
+
+{% block base_content %}
+<div class="row">
+    {% for item in data %}
+    <div class="col s4 m4">
+        <div class="card horizontal">
+            <div class="card-content">
+                {% if item['mark'] != '' %}
+                <p>Mark:{{ item['mark']}}</p>
+                {% endif %}
+                {% if item['model'] != '' %}
+                <p>Model:{{ item['model'] }}</p>
+                {% endif %}
+                {% if item['low_price'] != -1 %}
+                <p>Low price:{{ item['low_price'] }}</p>
+                {% endif %}
+                {% if item['high_price'] != -1 %}
+                <p>High price:{{ item['high_price'] }}</p>
+                {% endif %}
+                {% if item['year'] != -1 %}
+                <p>Year:{{ item['year']}}</p>
+                {% endif %}
+                {% if item['mileage'] != -1 %}
+                <p>Mileage:{{ item['mileage'] }}</p>
+                {% endif %}
+            </div>
+            <div class="card-action">
+                <a href="" target="_blank"> Open query </a>
+                <a href="/removeQuery/{{item['id']}}" class="btn-large waves-effect waves-light red">Remove query</a>
+            </div>
+        </div>
+    </div>
+
+    {% endfor %}
+</div>
+
+{% endblock %}

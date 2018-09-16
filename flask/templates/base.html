@@ -8,6 +8,7 @@
 <nav class="light-blue lighten-1" role="navigation">
     <div class="row right">
         {% if session['user_id'] %}
+        <a href="/queries" class="btn-large waves-effect waves-light orange">Queries</a>
         <a href="/logout" class="btn-large waves-effect waves-light orange">Logout</a>
         {% else %}
         <a href="/login" class="btn-large waves-effect waves-light light-blue">Login</a>

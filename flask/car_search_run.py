@@ -103,7 +103,7 @@ def confirm_token(token, expiration=3600):
 
 
 @app.route('/')
-def welcome():
+def index():
     return render_template('index.html')
 
 
@@ -125,13 +125,13 @@ def login():
             if bcrypt.check_password_hash(data[1], form.password.data):
                 session['user_id'] = data[0]
                 flash('SUCCESSSSSSS')
-                return render_template('index.html')
+                return redirect(url_for('index'))
             else:
                 flash('Wrong password')
                 return render_template('login.html', form=form)
         else:
             flash("Registration isn't finished")
-            return render_template('index.html')
+        return redirect(url_for('index'))
 
     return render_template('login.html', form=form)
 
@@ -184,7 +184,7 @@ def sign_up():
         else:
             flash('Passwords do not match')
             return render_template('signUp.html', form=form)
-        return render_template('index.html')
+        return redirect(url_for('index'))
     return render_template('signUp.html', form=form)
 
 
@@ -198,9 +198,43 @@ def confirm_email(token):
         flash('Registration finished')
     else:
         flash('OOPS...SOMETHING WENT WRONG....')
-        # TODO LOG ERROR
-        # str(data[0])
-    return render_template('index.html')
+    return redirect(url_for('index'))
+
+
+@app.route('/queries')
+def queries():
+    if session['user_id']:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, mark, model, high_price, low_price, year, mileage FROM queries WHERE user_id=%d"
+            % (int(session['user_id'])))
+        db_data = cursor.fetchall()
+        data = []
+        for row in db_data:
+            data.append({
+                'id' : row[0],
+                'mark' : row[1],
+                'model' : row[2],
+                'high_price' : row[3],
+                'low_price' : row[4],
+                'year' : row[5],
+                'mileage' : row[6]
+            })
+        return render_template("queries.html", data=data)
+    return redirect('/')
+
+
+@app.route('/removeQuery/<id>')
+def remove_query(id):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM queries WHERE id='%d'" %(int(id)))
+    data = cursor.fetchall()
+    if len(data) is 0:
+        conn.commit()
+        flash('Query removed')
+    else:
+        flash('OOPS...SOMETHING WENT WRONG....')
+    return redirect(url_for('queries'))
 
 
 @app.route('/logout')
