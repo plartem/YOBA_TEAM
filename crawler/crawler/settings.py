@@ -14,12 +14,12 @@ BOT_NAME = 'crawler'
 SPIDER_MODULES = ['crawler.spiders']
 NEWSPIDER_MODULE = 'crawler.spiders'
 
-ITEM_PIPELINES = {'crawler.pipelines.MongoDBPipeline' : 300}
+ITEM_PIPELINES = {'crawler.pipelines.MongoDBPipeline': 300}
 
 MONGODB_SERVER = "localhost"
 MONGODB_PORT = 27017
-MONGODB_DB = "autoria"
-MONGODB_COLLECTION = "new_cars"
+MONGODB_DB = "crawler_db"
+MONGODB_COLLECTION = "cars"
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -65,9 +65,9 @@ ROBOTSTXT_OBEY = False
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
-#    'scrapy.extensions.telnet.TelnetConsole': None,
-#}
+EXTENSIONS = {
+   'scrapy.extensions.closespider.CloseSpider': 1,
+}
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
