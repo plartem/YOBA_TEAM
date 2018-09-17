@@ -32,7 +32,8 @@ class RSTSpider(scrapy.Spider):
 
         item["url"] = href.replace('m.', '')
 
-        item["price"] = extract_with_css("strong.rst-uix-f-right::text")
+        price = extract_with_css("strong.rst-uix-f-right::text")
+        item["price"] = int(price.replace('\'',''))
 
         mark_name = re.search('oldcars/(.+?)/', href).group(1)
 
@@ -46,7 +47,7 @@ class RSTSpider(scrapy.Spider):
 
         item["image"] = extract_with_css("div.rst-uix-b-item img::attr(src)")
 
-        item["year"] = extract_with_css("a.rst-uix-black::text")
+        item["year"] = int(extract_with_css("a.rst-uix-black::text"))
 
         table = response.css('table.rst-uix-table-superline')
 
@@ -62,7 +63,7 @@ class RSTSpider(scrapy.Spider):
                         item["fuel"] = rows[1].css("::text")[0].extract()
 
                     if rows[0].css("::text")[0].extract() == "Пробег":
-                        item["mileage"] = rows[1].css("::text")[0].extract()
+                        item["mileage"] = int(rows[1].css("::text")[0].extract())
 
                     if rows[0].css("::text")[0].extract() == "КПП":
                         temp = rows[1].css("::text")[0].extract()
@@ -84,7 +85,7 @@ class RSTSpider(scrapy.Spider):
                     item["fuel"] = rows[0].css("::text")[0].extract()
 
                 if rows[0].css("::text")[1].extract() == "Пробег":
-                    item["mileage"] = rows[0].css("::text")[0].extract()
+                    item["mileage"] = int(rows[0].css("::text")[0].extract())
 
                 if rows[0].css("::text")[1].extract() == "КПП":
                     temp = rows[0].css("::text")[0].extract()
@@ -97,6 +98,7 @@ class RSTSpider(scrapy.Spider):
 
                 if rows[0].css("::text")[1].extract() == "Город":
                     item["location"] = rows[0].css("::text")[0].extract()
-
+        if item["mileage"] == "":
+            item["mileage"] = 0
         if item is not None:
             yield item

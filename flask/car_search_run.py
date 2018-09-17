@@ -1,4 +1,5 @@
 import re
+import sys
 import secrets
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_materialize import Material
@@ -37,7 +38,7 @@ app.config['MAIL_DEFAULT_SENDER'] = 'shoplab7@gmail.com'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.config['MYSQL_DATABASE_PORT'] = 3306
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = ''
+app.config['MYSQL_DATABASE_PASSWORD'] = 'root'
 app.config['MYSQL_DATABASE_DB'] = 'cars'
 
 app.secret_key = 'super secret key'
@@ -52,10 +53,14 @@ mysql.init_app(app)
 conn = mysql.connect()
 
 
-
 class ExampleForm(FlaskForm):
-    mark_name = StringField('Mark', validators=[validators.required()])
+    mark_name = StringField('Mark')
     model_name = StringField('Model')
+    transmission = StringField('Transmission')
+    year = IntegerField('Year', validators=[validators.Optional()])
+    mileage = IntegerField('Maximum Mileage', validators=[validators.Optional()])
+    low_price = IntegerField('Lower price', validators=[validators.Optional()])
+    high_price = IntegerField('Higher price', validators=[validators.Optional()])
     submit_button = SubmitField('Find me a car!')
 
 
@@ -140,8 +145,34 @@ def start():
     form = ExampleForm(request.form)
 
     if form.validate_on_submit():
-        regx = re.compile("^%s$" % (form.mark_name.data), re.IGNORECASE)
-        cars = list(mongo.db.cars.find({"mark_name": regx}))
+        temp = 0
+
+        if form.mark_name.data == "":
+            form.mark_name.data = ".+"
+        if form.model_name.data == "":
+            form.model_name.data = ".+"
+        if form.transmission.data == "":
+            form.transmission.data = ".+"
+        if form.mileage.data is None:
+            form.mileage.data = sys.maxsize
+        if form.year.data is None:
+            form.year.data = 2020
+        else:
+            temp = form.year.data
+        if form.low_price.data is None:
+            form.low_price.data = -sys.maxsize
+        if form.high_price.data is None:
+            form.high_price.data = sys.maxsize
+
+        regx_mark = re.compile("^%s$" % form.mark_name.data, re.IGNORECASE)
+        regx_model = re.compile("^%s$" % form.model_name.data, re.IGNORECASE)
+        regx_transmission = re.compile("^%s$" % form.transmission.data, re.IGNORECASE)
+
+        cars = list(mongo.db.cars.find({"mark_name": regx_mark, "model_name": regx_model,
+                                        "transmission": regx_transmission,
+                                        "mileage": {"$lte": form.mileage.data},
+                                        "year": {"$gte": temp, "$lte": form.year.data},
+                                        "price": {"$gte": form.low_price.data, "$lte": form.high_price.data}}))
         return render_template('check.html', data=cars)
 
     return render_template('start.html', form=form)
@@ -157,7 +188,7 @@ def checkDB():
 @app.route('/signup', methods=['GET', 'POST'])
 def sign_up():
     form = SignUpForm(request.form)
-    if form.validate_on_submit():        
+    if form.validate_on_submit():
         if form.password.data == form.confirm.data:
             hash = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             token = secrets.token_urlsafe(64)
@@ -169,8 +200,9 @@ def sign_up():
 
             try:
                 cursor = conn.cursor()
-                cursor.execute("INSERT INTO users(email, password, name, surname, login, token) VALUES('%s', '%s', '%s', '%s', '%s', '%s')"
-                              %(form.email.data, hash, form.name.data, form.surname.data, form.login.data, token))
+                cursor.execute(
+                    "INSERT INTO users(email, password, name, surname, login, token) VALUES('%s', '%s', '%s', '%s', '%s', '%s')"
+                    % (form.email.data, hash, form.name.data, form.surname.data, form.login.data, token))
                 data = cursor.fetchall()
             except:
                 flash('OOPS...SOMETHING WENT WRONG....')
@@ -190,7 +222,7 @@ def sign_up():
 @app.route('/confirm/<token>')
 def confirm_email(token):
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET token='' WHERE token='%s'" %(token))
+    cursor.execute("UPDATE users SET token='' WHERE token='%s'" % (token))
     data = cursor.fetchall()
     if len(data) is 0:
         conn.commit()
@@ -211,13 +243,13 @@ def queries():
         data = []
         for row in db_data:
             data.append({
-                'id' : row[0],
-                'mark' : row[1],
-                'model' : row[2],
-                'high_price' : row[3],
-                'low_price' : row[4],
-                'year' : row[5],
-                'mileage' : row[6]
+                'id': row[0],
+                'mark': row[1],
+                'model': row[2],
+                'high_price': row[3],
+                'low_price': row[4],
+                'year': row[5],
+                'mileage': row[6]
             })
         return render_template("queries.html", data=data)
     return redirect('/')
@@ -226,7 +258,7 @@ def queries():
 @app.route('/removeQuery/<id>')
 def remove_query(id):
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM queries WHERE id='%d'" %(int(id)))
+    cursor.execute("DELETE FROM queries WHERE id='%d'" % (int(id)))
     data = cursor.fetchall()
     if len(data) is 0:
         conn.commit()
