@@ -1,7 +1,7 @@
 import re
 import sys
 import secrets
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, json
 from flask_materialize import Material
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
@@ -38,7 +38,7 @@ app.config['MAIL_DEFAULT_SENDER'] = 'shoplab7@gmail.com'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.config['MYSQL_DATABASE_PORT'] = 3306
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'root'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'cars'
 
 app.secret_key = 'super secret key'
@@ -142,10 +142,20 @@ def login():
 
 @app.route('/start', methods=['GET', 'POST'])
 def start():
-    form = ExampleForm(request.form)
+    form = ExampleForm(request.values)
 
-    if form.validate_on_submit():
+    if form.validate_on_submit() or form.submit_button.data:
         temp = 0
+
+        link = url_for('add_query', data={
+            'mark': form.mark_name.data,
+            'model': form.model_name.data,
+            'high_price': -1 if form.high_price.data is None else form.high_price.data,
+            'low_price': -1 if form.low_price.data is None else form.low_price.data,
+            'year': -1 if form.year.data is None else form.year.data,
+            'mileage': -1 if form.mileage.data is None else form.mileage.data
+        })
+        print(link)
 
         if form.mark_name.data == "":
             form.mark_name.data = ".+"
@@ -173,16 +183,9 @@ def start():
                                         "mileage": {"$lte": form.mileage.data},
                                         "year": {"$gte": temp, "$lte": form.year.data},
                                         "price": {"$gte": form.low_price.data, "$lte": form.high_price.data}}))
-        return render_template('check.html', data=cars)
+        return render_template('check.html', data=cars, link=link)
 
     return render_template('start.html', form=form)
-
-
-@app.route('/checkDB')
-def checkDB():
-    cars = list(mongo.db.cars.find())
-
-    return render_template('check.html', data=cars)
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -232,6 +235,22 @@ def confirm_email(token):
     return redirect(url_for('index'))
 
 
+@app.route('/addQuery', methods=['GET'])
+def add_query():
+    if session['user_id']:
+        print(str(request.values['data']))
+        data = json.loads(str(request.values['data']).replace('\'', '\"'))
+        print(data)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO queries(mark, model, high_price, low_price, year, mileage, user_id) VALUES('%s', '%s', '%f', '%f', '%d', '%d', '%d')"
+            % (data['mark'], data['model'], data['high_price'], data['low_price'],
+               data['year'], data['mileage'], int(session['user_id'])))
+        db_data = cursor.fetchall()
+        return redirect("/queries")
+    return redirect('/')
+
+
 @app.route('/queries')
 def queries():
     if session['user_id']:
@@ -249,7 +268,14 @@ def queries():
                 'high_price': row[3],
                 'low_price': row[4],
                 'year': row[5],
-                'mileage': row[6]
+                'mileage': row[6],
+                'url': url_for('start', mark_name=row[1],
+                               model_name=row[2],
+                               high_price=row[3] if row[3] != -1 else None,
+                               low_price=row[4] if row[4] != -1 else None,
+                               year=row[5] if row[5] != -1 else None,
+                               mileage=row[6] if row[6] != -1 else None,
+                               submit_button=True)
             })
         return render_template("queries.html", data=data)
     return redirect('/')
@@ -258,7 +284,7 @@ def queries():
 @app.route('/removeQuery/<id>')
 def remove_query(id):
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM queries WHERE id='%d'" % (int(id)))
+    cursor.execute("DELETE FROM queries WHERE id='%d' AND user_id='%d'" % (int(id), int(session["user_id"])))
     data = cursor.fetchall()
     if len(data) is 0:
         conn.commit()
