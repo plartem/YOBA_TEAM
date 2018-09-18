@@ -1,0 +1,1 @@
+celery -A scheduler beat --loglevel=info --logfile=logs/celery_worker.log
