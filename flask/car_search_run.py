@@ -1,7 +1,7 @@
 import re
 import sys
 import secrets
-from flask import Flask, render_template, request, redirect, url_for, flash, session, json
+from flask import Flask, render_template, request, redirect, url_for, flash, session, json, jsonify
 from flask_materialize import Material
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
@@ -38,7 +38,7 @@ app.config['MAIL_DEFAULT_SENDER'] = 'shoplab7@gmail.com'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.config['MYSQL_DATABASE_PORT'] = 3306
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = ''
+app.config['MYSQL_DATABASE_PASSWORD'] = 'root'
 app.config['MYSQL_DATABASE_DB'] = 'cars'
 
 app.secret_key = 'super secret key'
@@ -106,7 +106,30 @@ def confirm_token(token, expiration=3600):
     # return False
     return email
 
-
+@app.route('/marks')
+def marks():
+    data = list(mongo.db.cars.aggregate([
+        {
+            "$group": {
+                "_id": {"$toUpper": "$mark_name"},
+                "count": {"$sum": 1}
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "counts": {
+                    "$push": {
+                        "mark": "$_id",
+                        "value": "$count"
+                    }
+                }
+            }
+        }
+    ]))
+    for d in data:
+        print(d["counts"])
+    return jsonify(data[0]["counts"])
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -195,6 +218,7 @@ def sign_up():
         if form.password.data == form.confirm.data:
             hash = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             token = secrets.token_urlsafe(64)
+
             confirm_url = url_for('confirm_email', token=token, _external=True)
 
             html = render_template('activate.html', confirm_url=confirm_url)
