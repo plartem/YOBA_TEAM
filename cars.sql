@@ -69,6 +69,21 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `email`, `password`, `name`, `surname`, `login`, `token`) VALUES
 (9, 'bcklmnop@gmail.com', '$2b$12$/2AI2MgRVQ9zirUKIZkKOOUx7V1r2thW2p5xcFc4rRbbpYhHf5evy', 'bcklmnop', 'bcklmnop', 'bcklmnop', '');
 
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `logs`
+--
+
+CREATE TABLE IF NOT EXISTS `logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` char(50) DEFAULT NULL,
+  `message` varchar(255) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
 --
 -- Индексы сохранённых таблиц
 --

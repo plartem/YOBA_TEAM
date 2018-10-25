@@ -16,6 +16,7 @@ from scrapy.conf import settings
 from scrapy.exceptions import DropItem
 from scrapy import log
 
+from flask.logger import Logger
 
 class MongoDBPipeline(object):
 
@@ -26,6 +27,8 @@ class MongoDBPipeline(object):
         )
         db = connection[settings['MONGODB_DB']]
         self.collection = db[settings['MONGODB_COLLECTION']]
+        logger = Logger()
+        logger.log("Scrapy Mongo", "New update")
 
     def process_item(self, item, spider):
         valid = True

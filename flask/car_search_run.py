@@ -19,6 +19,8 @@ from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from flaskext.mysql import MySQL
 
+from logger import Logger
+
 app = Flask(__name__)
 Material(app)
 app.config['SECRET_KEY'] = 'USE-YOUR-OWN-SECRET-KEY-DAMNIT'
@@ -38,7 +40,7 @@ app.config['MAIL_DEFAULT_SENDER'] = 'shoplab7@gmail.com'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.config['MYSQL_DATABASE_PORT'] = 3306
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'root'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'cars'
 
 app.secret_key = 'super secret key'
@@ -52,6 +54,7 @@ mysql = MySQL()
 mysql.init_app(app)
 conn = mysql.connect()
 
+logger = Logger()
 
 class ExampleForm(FlaskForm):
     mark_name = StringField('Mark')
@@ -87,6 +90,7 @@ def send_email(to, subject, template):
         recipients=[to],
         html=template
     )
+    logger.log("Sender", "Send mail to %s" % (to))
     mail.send(msg)
 
 
@@ -151,10 +155,12 @@ def login():
         if data[2] == '':
             if bcrypt.check_password_hash(data[1], form.password.data):
                 session['user_id'] = data[0]
+                logger.log("Session", "User %i login" % (int(session["user_id"])))
                 flash('SUCCESSSSSSS')
                 return redirect(url_for('index'))
             else:
                 flash('Wrong password')
+                logger.log("Session", "User %i wrong password" % (int(session["user_id"])))
                 return render_template('login.html', form=form)
         else:
             flash("Registration isn't finished")
@@ -224,6 +230,7 @@ def sign_up():
             html = render_template('activate.html', confirm_url=confirm_url)
             subject = "Please confirm your email"
             send_email(form.email.data, subject, html)
+            logger.log("Sign Up", "Need confirm for %s" % (form.email.data))
 
             try:
                 cursor = conn.cursor()
@@ -253,6 +260,7 @@ def confirm_email(token):
     data = cursor.fetchall()
     if len(data) is 0:
         conn.commit()
+        logger.log("Session", "User %i finished ewgistration" % (int(session["user_id"])))
         flash('Registration finished')
     else:
         flash('OOPS...SOMETHING WENT WRONG....')
@@ -271,6 +279,7 @@ def add_query():
             % (data['mark'], data['model'], data['high_price'], data['low_price'],
                data['year'], data['mileage'], int(session['user_id'])))
         db_data = cursor.fetchall()
+        logger.log("Query", "User %i added query" % (int(session['user_id'])))
         return redirect("/queries")
     return redirect('/')
 
@@ -310,6 +319,7 @@ def remove_query(id):
     cursor = conn.cursor()
     cursor.execute("DELETE FROM queries WHERE id='%d' AND user_id='%d'" % (int(id), int(session["user_id"])))
     data = cursor.fetchall()
+    logger.log("Query", "User %i removed query" % (int(session["user_id"])))
     if len(data) is 0:
         conn.commit()
         flash('Query removed')
@@ -321,4 +331,5 @@ def remove_query(id):
 @app.route('/logout')
 def logout():
     session.clear()
+    logger.log("Session", "User %i logout" % (int(session["user_id"])))
     return redirect('/')
