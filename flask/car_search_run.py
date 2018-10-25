@@ -184,7 +184,7 @@ def login():
                 return redirect(url_for('index'))
             else:
                 flash('Wrong password')
-                logger.log("Session", "User %i wrong password" % (int(session["user_id"])))
+                logger.log("Session", "Wrong password")
                 return render_template('login.html', form=form)
         else:
             flash("Registration isn't finished")
@@ -290,7 +290,7 @@ def confirm_email(token):
     data = cursor.fetchall()
     if len(data) is 0:
         conn.commit()
-        logger.log("Session", "User %i finished ewgistration" % (int(session["user_id"])))
+        logger.log("Session", "User finished registration")
         flash('Registration finished')
     else:
         flash('OOPS...SOMETHING WENT WRONG....')
@@ -360,6 +360,6 @@ def remove_query(id):
 
 @app.route('/logout')
 def logout():
-    session.clear()
     logger.log("Session", "User %i logout" % (int(session["user_id"])))
+    session.clear()
     return redirect('/')
