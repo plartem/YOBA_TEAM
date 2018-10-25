@@ -33,23 +33,23 @@ class MongoDBPipeline(object):
             if not data:
                 valid = False
                 raise DropItem("Missing {0}!".format(data))
-        if valid:
-            self.collection.update(
-                {"url": item["url"]},
-                {"$set":{
-                    "image": item["image"],
-                    "mark_name": item["mark_name"],
-                    "model_name": item["model_name"],
-                    "location": item["location"],
-                    "price": item["price"],
-                    "mileage": item["mileage"],
-                    "info": item["info"],
-                    "transmission": item["transmission"],
-                    "fuel": item["fuel"],
-                    "year": item["year"]
-                }},
-                upsert=True
-            )
+            if valid:
+                self.collection.update(
+				    {"url": item["url"]},
+                        {"$set":{
+                        "image": item["image"],
+                        "mark_name": item["mark_name"],
+                        "model_name": item["model_name"],
+                        "location": item["location"],
+                        "price": item["price"],
+                        "mileage": item["mileage"],
+                        "info": item["info"],
+                        "transmission": item["transmission"],
+                        "fuel": item["fuel"],
+                        "year": item["year"]
+                    }},
+					upsert=True
+				)
 
             #self.collection.insert(dict(item))
             log.msg("Car added to MongoDB database!",

@@ -211,7 +211,7 @@ def start():
     return render_template('start.html', form=form)
 
 
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route('/signUp', methods=['GET', 'POST'])
 def sign_up():
     form = SignUpForm(request.form)
     if form.validate_on_submit():

@@ -9,14 +9,16 @@
     <div>
         <br><br>
         <h3 class="header center orange-text">Results: </h3>
+		{% if session["user_id"] %}
         <a href="{{link}}" class="btn-large waves-effect waves-light orange">ADD TO SAVED QUERIES</a>
-        <div class="row">
+        {% endif %}
+		<div class="row">
             {% for item in data %}
             <div class="col s6 m6">
                 <h2 class="header">{{ item['mark_name'] }} {{ item['model_name'] }}</h2>
                 <div class="card horizontal">
                     <div class="card-image waves-effect waves-block waves-light">
-                        <img class="activator" src={{ item['image']}}>
+                        <img class="activator" style="max-height:400px" src={{ item['image']}}>
                     </div>
                     <div class="card-reveal">
                         <span class="card-title grey-text text-darken-4"><i
