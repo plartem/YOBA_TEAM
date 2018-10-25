@@ -6,10 +6,29 @@ from flask_materialize import Material
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
 from wtforms import StringField, HiddenField, ValidationError, RadioField, \
-    BooleanField, SubmitField, IntegerField, FormField, PasswordField, validators
+    BooleanField, SubmitField, IntegerField, FormField, PasswordField, validators, SelectField
 from wtforms.validators import Required, DataRequired
 from flask_pymongo import PyMongo
 from flask_session import Session
+
+import subprocess
+
+import os
+
+
+class cd:
+    """Context manager for changing the current working directory"""
+
+    def __init__(self, newPath):
+        self.newPath = os.path.expanduser(newPath)
+
+    def __enter__(self):
+        self.savedPath = os.getcwd()
+        os.chdir(self.newPath)
+
+    def __exit__(self, etype, value, traceback):
+        os.chdir(self.savedPath)
+
 
 from flask_bcrypt import Bcrypt
 
@@ -20,7 +39,6 @@ from itsdangerous import URLSafeTimedSerializer
 from flaskext.mysql import MySQL
 
 from logger import Logger
-import config
 
 app = Flask(__name__)
 Material(app)
@@ -38,11 +56,19 @@ app.config['MAIL_USERNAME'] = 'shoplab7@gmail.com'
 app.config['MAIL_PASSWORD'] = 'shoplab7test'
 app.config['MAIL_DEFAULT_SENDER'] = 'shoplab7@gmail.com'
 
-app.config['MYSQL_DATABASE_HOST'] = config.MYSQL_CONFIG['host']
-app.config['MYSQL_DATABASE_PORT'] = config.MYSQL_CONFIG['port']
-app.config['MYSQL_DATABASE_USER'] = config.MYSQL_CONFIG['user']
-app.config['MYSQL_DATABASE_PASSWORD'] = config.MYSQL_CONFIG['password']
-app.config['MYSQL_DATABASE_DB'] = config.MYSQL_CONFIG['dbname']
+MYSQL_CONFIG = {
+    'host': 'localhost',
+    'dbname': 'cars',
+    'user': 'root',
+    'password': '',
+    'port': 3306
+}
+
+app.config['MYSQL_DATABASE_HOST'] = MYSQL_CONFIG['host']
+app.config['MYSQL_DATABASE_PORT'] = MYSQL_CONFIG['port']
+app.config['MYSQL_DATABASE_USER'] = MYSQL_CONFIG['user']
+app.config['MYSQL_DATABASE_PASSWORD'] = MYSQL_CONFIG['password']
+app.config['MYSQL_DATABASE_DB'] = MYSQL_CONFIG['dbname']
 
 app.secret_key = 'super secret key'
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -65,6 +91,7 @@ class ExampleForm(FlaskForm):
     mileage = IntegerField('Maximum Mileage', validators=[validators.Optional()])
     low_price = IntegerField('Lower price', validators=[validators.Optional()])
     high_price = IntegerField('Higher price', validators=[validators.Optional()])
+    reparse = StringField('Reparse')
     submit_button = SubmitField('Find me a car!')
 
 
@@ -111,6 +138,7 @@ def confirm_token(token, expiration=3600):
     # return False
     return email
 
+
 @app.route('/marks')
 def marks():
     data = list(mongo.db.cars.aggregate([
@@ -135,6 +163,8 @@ def marks():
     for d in data:
         print(d["counts"])
     return jsonify(data[0]["counts"])
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -185,7 +215,6 @@ def start():
             'year': -1 if form.year.data is None else form.year.data,
             'mileage': -1 if form.mileage.data is None else form.mileage.data
         })
-        print(link)
 
         if form.mark_name.data == "":
             form.mark_name.data = ".+"
@@ -208,11 +237,18 @@ def start():
         regx_model = re.compile("^%s$" % form.model_name.data, re.IGNORECASE)
         regx_transmission = re.compile("^%s$" % form.transmission.data, re.IGNORECASE)
 
+        if form.reparse.data != '':
+            with cd("crawler"):
+                cmdCommand = "python start_all.py"  # specify your cmd command
+                process = subprocess.Popen(cmdCommand.split(), stdout=subprocess.PIPE)
+                process.communicate()
+
         cars = list(mongo.db.cars.find({"mark_name": regx_mark, "model_name": regx_model,
                                         "transmission": regx_transmission,
                                         "mileage": {"$lte": form.mileage.data},
                                         "year": {"$gte": temp, "$lte": form.year.data},
                                         "price": {"$gte": form.low_price.data, "$lte": form.high_price.data}}))
+
         return render_template('check.html', data=cars, link=link)
 
     return render_template('start.html', form=form)
