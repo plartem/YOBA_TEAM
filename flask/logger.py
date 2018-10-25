@@ -1,15 +1,17 @@
 import mysql.connector
 
+import config
+
 class Logger:
     dbstate = None
 
     def __init__(self):
         self.dbstate = mysql.connector.connect(
-            host='localhost',
-            port=3306,
-            user='root',
-            passwd='',
-            database='cars'
+            host=config.MYSQL_CONFIG['host'],
+            port=config.MYSQL_CONFIG['port'],
+            user=config.MYSQL_CONFIG['user'],
+            passwd=config.MYSQL_CONFIG['password'],
+            database=config.MYSQL_CONFIG['dbname']
         )
 
     def log(self, message, type=""):
