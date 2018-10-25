@@ -39,6 +39,7 @@ from itsdangerous import URLSafeTimedSerializer
 from flaskext.mysql import MySQL
 
 from logger import Logger
+import config
 
 app = Flask(__name__)
 Material(app)
@@ -56,19 +57,11 @@ app.config['MAIL_USERNAME'] = 'shoplab7@gmail.com'
 app.config['MAIL_PASSWORD'] = 'shoplab7test'
 app.config['MAIL_DEFAULT_SENDER'] = 'shoplab7@gmail.com'
 
-MYSQL_CONFIG = {
-    'host': 'localhost',
-    'dbname': 'cars',
-    'user': 'root',
-    'password': '',
-    'port': 3306
-}
-
-app.config['MYSQL_DATABASE_HOST'] = MYSQL_CONFIG['host']
-app.config['MYSQL_DATABASE_PORT'] = MYSQL_CONFIG['port']
-app.config['MYSQL_DATABASE_USER'] = MYSQL_CONFIG['user']
-app.config['MYSQL_DATABASE_PASSWORD'] = MYSQL_CONFIG['password']
-app.config['MYSQL_DATABASE_DB'] = MYSQL_CONFIG['dbname']
+app.config['MYSQL_DATABASE_HOST'] = config.MYSQL_CONFIG['host']
+app.config['MYSQL_DATABASE_PORT'] = config.MYSQL_CONFIG['port']
+app.config['MYSQL_DATABASE_USER'] = config.MYSQL_CONFIG['user']
+app.config['MYSQL_DATABASE_PASSWORD'] = config.MYSQL_CONFIG['password']
+app.config['MYSQL_DATABASE_DB'] = config.MYSQL_CONFIG['dbname']
 
 app.secret_key = 'super secret key'
 app.config['SESSION_TYPE'] = 'filesystem'
