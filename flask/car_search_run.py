@@ -368,7 +368,6 @@ def download_query(id):
         data = []
         for row in db_data:
             data.append({
-                'id': row[0],
                 'mark': row[1],
                 'model': row[2],
                 'high_price': row[3],
