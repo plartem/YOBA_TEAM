@@ -357,6 +357,38 @@ def remove_query(id):
         flash('OOPS...SOMETHING WENT WRONG....')
     return redirect(url_for('queries'))
 
+@app.route('/downloadQuery/<id>')
+def download_query(id):
+    if session['user_id']:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, mark, model, high_price, low_price, year, mileage FROM queries WHERE user_id=%d"
+            % (int(session['user_id'])))
+        db_data = cursor.fetchall()
+        data = []
+        for row in db_data:
+            data.append({
+                'id': row[0],
+                'mark': row[1],
+                'model': row[2],
+                'high_price': row[3],
+                'low_price': row[4],
+                'year': row[5],
+                'mileage': row[6],
+                'url': url_for('start', mark_name=row[1],
+                               model_name=row[2],
+                               high_price=row[3] if row[3] != -1 else None,
+                               low_price=row[4] if row[4] != -1 else None,
+                               year=row[5] if row[5] != -1 else None,
+                               mileage=row[6] if row[6] != -1 else None,
+                               submit_button=True)
+            })
+        response = app.response_class(
+            response=json.dumps(data),
+            mimetype='application/json'
+        )
+        return response
+    return redirect(url_for('queries'))
 
 @app.route('/logout')
 def logout():
