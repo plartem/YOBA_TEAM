@@ -218,17 +218,17 @@ def start():
         if form.mileage.data is None:
             form.mileage.data = sys.maxsize
         if form.year.data is None:
-            form.year.data = 2020
+            form.year.data = sys.maxsize
         else:
             temp = form.year.data
         if form.low_price.data is None:
             form.low_price.data = -sys.maxsize
         if form.high_price.data is None:
             form.high_price.data = sys.maxsize
-
-        regx_mark = re.compile("^%s$" % form.mark_name.data, re.IGNORECASE)
-        regx_model = re.compile("^%s$" % form.model_name.data, re.IGNORECASE)
-        regx_transmission = re.compile("^%s$" % form.transmission.data, re.IGNORECASE)
+    
+        regx_mark = re.compile(form.mark_name.data, re.IGNORECASE)
+        regx_model = re.compile(form.model_name.data, re.IGNORECASE)
+        regx_transmission = re.compile(form.transmission.data, re.IGNORECASE)
 
         if form.reparse.data != '':
             with cd("crawler"):
@@ -241,7 +241,7 @@ def start():
                                         "mileage": {"$lte": form.mileage.data},
                                         "year": {"$gte": temp, "$lte": form.year.data},
                                         "price": {"$gte": form.low_price.data, "$lte": form.high_price.data}}))
-
+        
         return render_template('check.html', data=cars, link=link)
 
     return render_template('start.html', form=form)

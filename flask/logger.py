@@ -21,3 +21,4 @@ class Logger:
             self.dbstate.commit()
         except:
             print("Logger query fails")
+            
