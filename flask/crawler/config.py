@@ -7,7 +7,7 @@ MYSQL_CONFIG = {
 }
 
 MAIL_CONFIG = {
-    'server': 'smtp.gmail.com',
+    'server': 'smtp.gmail.com'.strip('\n'),
     'port': 465,
     'username': 'shoplab7@gmail.com',
     'password': 'shoplab7test',
