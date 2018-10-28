@@ -1,17 +1,17 @@
 import mysql.connector
 
-import config
+import crawler.config as cnfg
 
 class Logger:
     dbstate = None
 
     def __init__(self):
         self.dbstate = mysql.connector.connect(
-            host=config.MYSQL_CONFIG['host'],
-            port=config.MYSQL_CONFIG['port'],
-            user=config.MYSQL_CONFIG['user'],
-            passwd=config.MYSQL_CONFIG['password'],
-            database=config.MYSQL_CONFIG['dbname']
+            host=cnfg.MYSQL_CONFIG['host'],
+            port=cnfg.MYSQL_CONFIG['port'],
+            user=cnfg.MYSQL_CONFIG['user'],
+            passwd=cnfg.MYSQL_CONFIG['password'],
+            database=cnfg.MYSQL_CONFIG['dbname']
         )
 
     def log(self, message, type=""):
@@ -21,3 +21,4 @@ class Logger:
             self.dbstate.commit()
         except:
             print("Logger query fails")
+            

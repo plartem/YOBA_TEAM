@@ -39,7 +39,7 @@ from itsdangerous import URLSafeTimedSerializer
 from flaskext.mysql import MySQL
 
 from logger import Logger
-import config
+import crawler.config as config
 
 app = Flask(__name__)
 Material(app)
@@ -48,14 +48,14 @@ app.config['SECURITY_PASSWORD_SALT'] = 'SALT'
 app.config['RECAPTCHA_PUBLIC_KEY'] = 'TEST'
 # app.config['MAIL_DEFAULT_SENDER'] = 'sender'
 
-app.config["MONGO_URI"] = "mongodb://localhost:27017/crawler_db"
+app.config["MONGO_URI"] = config.MONGO_URI
 
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
+app.config['MAIL_SERVER'] = config.MAIL_CONFIG['server']
+app.config['MAIL_PORT'] = config.MAIL_CONFIG['port']
 app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'shoplab7@gmail.com'
-app.config['MAIL_PASSWORD'] = 'shoplab7test'
-app.config['MAIL_DEFAULT_SENDER'] = 'shoplab7@gmail.com'
+app.config['MAIL_USERNAME'] = config.MAIL_CONFIG['username']
+app.config['MAIL_PASSWORD'] = config.MAIL_CONFIG['password']
+app.config['MAIL_DEFAULT_SENDER'] = config.MAIL_CONFIG['def_sender']
 
 app.config['MYSQL_DATABASE_HOST'] = config.MYSQL_CONFIG['host']
 app.config['MYSQL_DATABASE_PORT'] = config.MYSQL_CONFIG['port']
@@ -218,17 +218,17 @@ def start():
         if form.mileage.data is None:
             form.mileage.data = sys.maxsize
         if form.year.data is None:
-            form.year.data = 2020
+            form.year.data = sys.maxsize
         else:
             temp = form.year.data
         if form.low_price.data is None:
             form.low_price.data = -sys.maxsize
         if form.high_price.data is None:
             form.high_price.data = sys.maxsize
-
-        regx_mark = re.compile("^%s$" % form.mark_name.data, re.IGNORECASE)
-        regx_model = re.compile("^%s$" % form.model_name.data, re.IGNORECASE)
-        regx_transmission = re.compile("^%s$" % form.transmission.data, re.IGNORECASE)
+    
+        regx_mark = re.compile(form.mark_name.data, re.IGNORECASE)
+        regx_model = re.compile(form.model_name.data, re.IGNORECASE)
+        regx_transmission = re.compile(form.transmission.data, re.IGNORECASE)
 
         if form.reparse.data != '':
             with cd("crawler"):
@@ -241,7 +241,7 @@ def start():
                                         "mileage": {"$lte": form.mileage.data},
                                         "year": {"$gte": temp, "$lte": form.year.data},
                                         "price": {"$gte": form.low_price.data, "$lte": form.high_price.data}}))
-
+        
         return render_template('check.html', data=cars, link=link)
 
     return render_template('start.html', form=form)
