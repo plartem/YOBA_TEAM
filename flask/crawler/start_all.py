@@ -15,6 +15,7 @@ from crawler.spiders.autoria_spider import AutoriaSpider
 from crawler.spiders.rst import RSTSpider
 from crawler.spiders.autos_spider import AutosSpider
 
+import config
 
 process = CrawlerProcess(get_project_settings())
 process.crawl(AutoBazarSpider)
@@ -25,22 +26,22 @@ process.crawl(AutosSpider)
 process.start()
 
 dbstate = mysql.connector.connect(
-    host='localhost',
-    port=3306,
-    user='root',
-    passwd='',
-    database='cars'
+    host=config.MYSQL_CONFIG['host'],
+    port=config.MYSQL_CONFIG['port'],
+    user=config.MYSQL_CONFIG['user'],
+    password=config.MYSQL_CONFIG['password'],
+    database=config.MYSQL_CONFIG['dbname']
 )
 connection = pymongo.MongoClient(
     "localhost",
     27017
 )
 
-server = smtplib.SMTP('smtp.gmail.com', 587)
+server = smtplib.SMTP(config.MAIL_CONFIG['server'], 587)
 
 server.starttls()
 # Next, log in to the server
-server.login("shoplab7@gmail.com", "shoplab7test")
+server.login(config.MAIL_CONFIG['username'], config.MAIL_CONFIG['password'])
 
 db = connection["crawler_db"]
 collection = db["cars"]
@@ -81,7 +82,7 @@ for x in myresult:
         msg += car['mark_name'] + " " + car["model_name"] + "\n"
     msg += "Queries list: 127.0.0.1:5000/queries\n"
     print(msg.encode('utf8'))
-    server.sendmail("shoplab7@gmail.com", x[12], msg.encode('utf8'))
+    server.sendmail(config.MAIL_CONFIG['def_sender'], x[12], msg.encode('utf8'))
     mycursor.execute("UPDATE queries SET updatedAt=CURRENT_TIMESTAMP WHERE id=%s", (x[0],))
 dbstate.commit()
 
