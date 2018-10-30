@@ -133,6 +133,7 @@ coverage.xml
 
 # Django stuff:
 *.log
+!flask/crawler/logs/*.log
 local_settings.py
 db.sqlite3
 

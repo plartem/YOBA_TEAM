@@ -308,7 +308,8 @@ def add_query():
             "INSERT INTO queries(mark, model, high_price, low_price, year, mileage, user_id) VALUES('%s', '%s', '%f', '%f', '%d', '%d', '%d')"
             % (data['mark'], data['model'], data['high_price'], data['low_price'],
                data['year'], data['mileage'], int(session['user_id'])))
-        db_data = cursor.fetchall()
+        cursor.fetchall()
+        conn.commit()
         logger.log("Query", "User %i added query" % (int(session['user_id'])))
         return redirect("/queries")
     return redirect('/')

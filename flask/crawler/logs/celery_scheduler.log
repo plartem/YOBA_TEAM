@@ -1,0 +1,4 @@
+[2018-10-29 14:29:40,522: INFO/SpawnPoolWorker-1] child process 15788 calling self.run()
+[2018-10-29 14:29:43,896: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/1: Error 10061 connecting to localhost:6379. Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение..
+Trying again in 2.00 seconds...
+
